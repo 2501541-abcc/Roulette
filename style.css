@@ -146,3 +146,18 @@ body.kaku h1 { color: #ff4a3a; text-shadow: 0 0 18px #ffd400; }
 @keyframes crtdot { 0% { opacity: 0; transform: translate(-50%, -50%) scale(.3); } 30% { opacity: 1; transform: translate(-50%, -50%) scale(1.3); } 100% { opacity: 0; transform: translate(-50%, -50%) scale(.1); } }
 #freeze.black .crt-line, #freeze.black .crt-dot { display: none; }
 #freeze.crt { background: transparent; }
+
+/* ちらつき中は不透明にして、暗転前のルーレット画面が透けて「もう一度出た」ように見えないようにする */
+#freeze.dim { background: #0b0718; }
+
+#freeze.crt-done .crt-top, #freeze.crt-done .crt-bot, #freeze.crt-done .crt-line, #freeze.crt-done .crt-dot { display: none; }
+
+/* 「RUSH突入!!」の文字だけ虹色(背景などの赤はそのまま) */
+.fz-banner, .toast, .fz-sub {
+  background: linear-gradient(90deg, #ff3b3b, #ffd400, #3bff6a, #3b9bff, #c13bff, #ff3b3b); background-size: 200% 100%;
+  -webkit-background-clip: text; background-clip: text; color: transparent; -webkit-text-stroke: 2px #fff; text-shadow: none;
+  filter: drop-shadow(0 0 14px rgba(255, 255, 255, .6));
+}
+.fz-banner.show { animation: bannerin .5s cubic-bezier(.2, 1.7, .4, 1) forwards, bannerpulse .5s .5s ease-in-out infinite alternate, rainbowtxt 1.2s linear infinite; }
+.toast { animation: toast 2.6s forwards, rainbowtxt 1.2s linear infinite; }
+@keyframes rainbowtxt { to { background-position: -200% 0; } }

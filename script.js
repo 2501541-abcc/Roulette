@@ -218,18 +218,18 @@ function tone(freq, dur, type = 'triangle', vol = .07, to = null) {
 }
 
 let freezing = false;
-// 実機(スマスロ北斗)の動画を参考にしたフリーズ: 暗転 → 虹のオーラ → 閃光 → RUSH突入
+// 実機(スマスロ北斗)の動画を参考にしたフリーズ: 暗転 → RUSH突入
 async function freezeEffect() {
   if (freezing) return;
   freezing = true;
   const ov = document.createElement('div');
   ov.id = 'freeze';
   ov.innerHTML = '<div class="crt-top"></div><div class="crt-bot"></div><div class="crt-line"></div><div class="crt-dot"></div>' +
-    '<div class="fz-aura"></div><div class="fz-smoke"></div><div class="fz-flash"></div>' +
+    '<div class="fz-flash"></div>' +
     '<div class="fz-banner">' + 'RUSH突入!!' + '</div><div class="fz-sub"></div>';
   document.body.appendChild(ov);
   const q = sel => ov.querySelector(sel);
-  const flash = q('.fz-flash'), banner = q('.fz-banner'), sub = q('.fz-sub'), smoke = q('.fz-smoke');
+  const flash = q('.fz-flash'), banner = q('.fz-banner'), sub = q('.fz-sub');
   const shake = (px = 10, d = 220) => document.body.animate([{ transform: 'translate(0,0)' }, { transform: `translate(${-px}px,${px * .6}px)` }, { transform: `translate(${px}px,${-px * .6}px)` }, { transform: 'translate(0,0)' }], { duration: d });
   const flashOn = (ms = 160) => { flash.classList.add('on'); setTimeout(() => flash.classList.remove('on'), ms); };
 
@@ -239,36 +239,15 @@ async function freezeEffect() {
   // ブラウン管の電源OFFのように、画面が横一本の光の線に潰れ → 点になって消える
   ov.classList.add('crt'); tone(900, .55, 'sine', .05, 2600);
   await sleep(1050);
-  ov.classList.add('black');
+  ov.classList.remove('crt'); ov.classList.add('black', 'crt-done');   // crt を外さないと背景が透明のままで暗くならない。線と点もここで完全に消す
   noise2(.03, .5); tone(70, .06, 'square', .2, 30);   // 消える瞬間の「プチュン」
   await sleep(1300);                             // 完全な無音と暗闇
 
-  // 液晶のバックライトが不安定に点いたり消えたりして、やっと映る
-  for (const [on, off] of [[70, 160], [110, 90], [60, 260], [200, 0]]) {
-    ov.classList.remove('black'); ov.classList.add('dim'); tone(120, on / 1000, 'sawtooth', .03);
-    await sleep(on);
-    if (off) { ov.classList.remove('dim'); ov.classList.add('black'); await sleep(off); }
-  }
-  ov.classList.add('flicker-done');
+  // ③ 暗闇のままRUSH突入
+  shake(24, 400); noise2(.6, .4); tone(90, .6, 'sawtooth', .15, 40);   // 白い閃光は出さず、黒い画面のまま
+  await sleep(300);
 
-  // ③ 虹のオーラが膨らむ
-  ov.classList.add('aura');
-  [262, 330, 392, 523, 659, 784].forEach((f, i) => setTimeout(() => tone(f, .4, 'triangle', .07), i * 220));
-  await sleep(1600);
-
-  // ④ 閃光とともに色とりどりの煙が広がる
-  flashOn(450); shake(24, 400); noise2(.6, .4); tone(90, .6, 'sawtooth', .15, 40);
-  for (let i = 0; i < 26; i++) {
-    const b = document.createElement('i'), a = Math.random() * Math.PI * 2, d = 20 + Math.random() * 40;
-    b.style.setProperty('--dx', Math.cos(a) * d + 'vmax'); b.style.setProperty('--dy', Math.sin(a) * d + 'vmax');
-    b.style.background = `hsl(${Math.random() * 360}, 90%, 60%)`;
-    b.style.width = b.style.height = 14 + Math.random() * 22 + 'vmin';
-    smoke.appendChild(b);
-  }
-  ov.classList.remove('aura'); ov.classList.add('burst', 'rainbow');
-  await sleep(900);
-
-  // ⑤ RUSH突入
+  // ④ RUSH突入
   banner.classList.add('show');
   const spins = KAKUHEN_SPINS;
   sub.textContent = `RUSH ${spins}ゲーム突入!`; sub.classList.add('show');
