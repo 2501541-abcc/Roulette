@@ -1,0 +1,148 @@
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; min-height: 100vh; color: #f5e9c8;
+    font-family: "Hiragino Mincho ProN", "Yu Mincho", serif;
+    background: radial-gradient(ellipse at center, #0e6b3a 0%, #063d20 70%, #021a0d 100%);
+    display: flex; flex-direction: column; align-items: center; padding: 16px;
+  }
+  h1 { margin: 4px 0 12px; letter-spacing: .3em; color: #ffd95a; text-shadow: 0 0 12px #c9971c; font-size: 2rem; }
+  .main { display: flex; flex-wrap: wrap; gap: 24px; justify-content: center; align-items: flex-start; width: 100%; max-width: 1100px; }
+  .wheel-wrap { position: relative; width: 420px; max-width: 92vw; }
+  canvas { width: 100%; height: auto; display: block; }
+  .panel { flex: 1; min-width: 320px; max-width: 560px; }
+  .info { display: flex; justify-content: space-between; gap: 8px; margin-bottom: 10px; }
+  .box { background: rgba(0,0,0,.45); border: 2px solid #c9971c; border-radius: 10px; padding: 8px 14px; flex: 1; text-align: center; }
+  .box small { display: block; color: #d9c58a; font-size: .75rem; }
+  .box b { font-size: 1.4rem; color: #ffd95a; }
+  #result { text-align: center; min-height: 2.6rem; font-size: 1.3rem; margin: 6px 0; }
+  .chips { display: flex; gap: 8px; justify-content: center; margin: 8px 0; }
+  .chip {
+    width: 52px; height: 52px; border-radius: 50%; border: 4px dashed #fff; cursor: pointer;
+    color: #fff; font-weight: bold; font-family: sans-serif; box-shadow: 0 3px 6px #000a; outline: 2px solid transparent;
+  }
+  .chip.sel { outline-color: #ffd95a; transform: translateY(-4px); }
+  .c1 { background: #2a6fd6; } .c5 { background: #c0272d; } .c10 { background: #222; } .c50 { background: #7a2ea8; }
+  /* betting table */
+  .table { display: grid; grid-template-columns: 1.2fr repeat(12, 1fr); gap: 2px; background: #063d20; padding: 6px; border: 3px solid #c9971c; border-radius: 8px; }
+  .cell {
+    position: relative; text-align: center; padding: 9px 0; font-family: sans-serif; font-weight: bold; font-size: .85rem;
+    cursor: pointer; border: 1px solid #e8d9a0; user-select: none; color: #fff;
+  }
+  .cell:hover { filter: brightness(1.3); }
+  .red { background: #b81d24; } .black { background: #151515; } .green { background: #0a7a35; }
+  .felt { background: transparent; }
+  .zero { grid-row: span 3; display: flex; align-items: center; justify-content: center; }
+  .wide4 { grid-column: span 4; } .wide6 { grid-column: span 6; } .wide2 { grid-column: span 2; }
+  .stake {
+    position: absolute; right: 1px; top: 1px; min-width: 20px; height: 20px; border-radius: 10px; background: #ffd95a; color: #000;
+    font-size: .7rem; line-height: 20px; padding: 0 4px; box-shadow: 0 1px 3px #000;
+  }
+  .buttons { display: flex; gap: 10px; justify-content: center; margin-top: 12px; }
+  button.act {
+    font-family: inherit; font-size: 1.1rem; padding: 10px 22px; border-radius: 8px; border: 2px solid #ffd95a; cursor: pointer;
+    background: linear-gradient(#e0b33a, #a37a10); color: #1a1000; font-weight: bold;
+  }
+  button.act.spin { font-size: 1.3rem; padding: 10px 40px; background: linear-gradient(#e8403f, #8f0f12); color: #fff; }
+  button.act:disabled { opacity: .5; cursor: not-allowed; }
+  .history { display: flex; gap: 4px; justify-content: center; margin-top: 10px; flex-wrap: wrap; }
+  .history span { width: 28px; height: 28px; border-radius: 50%; text-align: center; line-height: 28px; font: bold .8rem sans-serif; color: #fff; border: 1px solid #fff8; }
+  .win { color: #7dff9c; } .lose { color: #ff8a8a; }
+
+/* ---------- フリーズ演出 ---------- */
+#freeze { position: fixed; inset: 0; z-index: 300; background: rgba(0,0,0,0); transition: background .3s, opacity .6s; overflow: hidden; }
+#freeze.black { background: #000; transition: none; }
+#freeze.dim { background: rgba(0,0,0,.6); }
+#freeze.out { opacity: 0; }
+#freeze.canclose { cursor: pointer; }
+.fz-lamps i { position: absolute; width: 3.2vmin; height: 3.2vmin; margin: -1.6vmin; border-radius: 50%; background: #333; transition: background .1s, box-shadow .1s; }
+.fz-lamps i.on { background: #fff6a8; box-shadow: 0 0 2vmin 1vmin #ffd400; }
+.rainbow .fz-lamps i.on { animation: lampcolor .4s linear infinite; }
+@keyframes lampcolor { 0% { background: #ff3b3b; box-shadow: 0 0 2vmin 1vmin #ff3b3b; } 33% { background: #3bff6a; box-shadow: 0 0 2vmin 1vmin #3bff6a; } 66% { background: #3b9bff; box-shadow: 0 0 2vmin 1vmin #3b9bff; } 100% { background: #ff3b3b; box-shadow: 0 0 2vmin 1vmin #ff3b3b; } }
+.fz-reels { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); display: flex; gap: 2vmin; opacity: 0; transition: opacity .3s; }
+.reelson .fz-reels { opacity: 1; }
+.fz-reels b {
+  width: 17vmin; height: 24vmin; display: flex; align-items: center; justify-content: center;
+  font: 900 20vmin/1 Georgia, serif; color: #666; background: linear-gradient(#ddd, #fff 50%, #ccc); border: 1vmin solid #c9971c; border-radius: 2vmin;
+  animation: reelblur .08s linear infinite;
+}
+.fz-reels b.stop { animation: none; color: #e60012; text-shadow: 0 0 2vmin #ff8a8a; }
+@keyframes reelblur { 0% { transform: translateY(-4%); filter: blur(3px); } 100% { transform: translateY(4%); filter: blur(3px); } }
+.fz-rays { position: absolute; left: 50%; top: 50%; width: 220vmax; height: 220vmax; margin: -110vmax; opacity: 0; transition: opacity .5s;
+  background: repeating-conic-gradient(#ff3b3b 0 8deg, #ffd400 8deg 16deg, #3bff6a 16deg 24deg, #3b9bff 24deg 32deg, #c13bff 32deg 40deg); animation: spinrays 6s linear infinite; mix-blend-mode: screen; }
+.rainbow .fz-rays { opacity: .55; }
+@keyframes spinrays { to { transform: rotate(360deg); } }
+.fz-banner {
+  position: absolute; left: 0; right: 0; top: 12%; text-align: center; opacity: 0; transform: scale(.2);
+  font: 900 clamp(2.5rem, 12vw, 8rem)/1 "Hiragino Kaku Gothic ProN", "Yu Gothic", sans-serif; color: #fff; letter-spacing: .06em;
+  -webkit-text-stroke: 2px #c00; text-shadow: 0 0 30px #ffd400, 0 0 60px #ff3b3b;
+}
+.fz-banner.show { animation: bannerin .5s cubic-bezier(.2, 1.7, .4, 1) forwards, bannerpulse .5s .5s ease-in-out infinite alternate; }
+@keyframes bannerin { to { opacity: 1; transform: scale(1); } }
+@keyframes bannerpulse { to { transform: scale(1.08); } }
+.fz-coin { position: absolute; top: -50px; font-size: 2.4rem; animation: fall linear infinite; }
+@keyframes fall { to { transform: translateY(115vh) rotate(720deg); } }
+
+/* ---------- 確変 ---------- */
+#kaku { text-align: center; font-size: 1.2rem; min-height: 0; color: #fff; }
+#kaku:not(:empty) {
+  margin-bottom: 8px; padding: 6px; border-radius: 10px; border: 2px solid #ffd400;
+  background: linear-gradient(90deg, #8f0f12, #e8403f, #8f0f12); background-size: 200% 100%; animation: kakubg 1.2s linear infinite;
+  text-shadow: 0 0 10px #ffd400;
+}
+#kaku b { color: #ffd400; font-size: 1.4rem; }
+#kaku small { display: block; font-size: .75rem; color: #ffe9a0; }
+@keyframes kakubg { to { background-position: -200% 0; } }
+body.kaku { background: radial-gradient(ellipse at center, #7a1010 0%, #3d0606 70%, #1a0202 100%); }
+body.kaku h1 { color: #ff4a3a; text-shadow: 0 0 18px #ffd400; }
+.toast {
+  position: fixed; left: 0; right: 0; top: 30%; z-index: 400; text-align: center; pointer-events: none;
+  font: 900 clamp(2rem, 9vw, 5.5rem)/1.1 "Hiragino Kaku Gothic ProN", "Yu Gothic", sans-serif; color: #fff;
+  -webkit-text-stroke: 2px #c00; text-shadow: 0 0 25px #ffd400; animation: toast 2.6s forwards;
+}
+@keyframes toast { 0% { opacity: 0; transform: scale(.3); } 12% { opacity: 1; transform: scale(1.1); } 20% { transform: scale(1); } 80% { opacity: 1; } 100% { opacity: 0; } }
+
+/* ---------- フリーズ演出 強化版 ---------- */
+.fz-blue, .fz-bolt, .fz-aura, .fz-smoke, .fz-flash { position: absolute; inset: 0; pointer-events: none; }
+.fz-blue { opacity: 0; background: radial-gradient(circle, #0a3a8a 0%, #02102e 80%); transition: opacity .6s; }
+.blue .fz-blue { opacity: .9; }
+.fz-flash { opacity: 0; background: #fff; z-index: 5; transition: opacity .1s; }
+.fz-flash.on { opacity: .95; transition: none; }
+.fz-bolt { width: 100%; height: 100%; }
+.fz-aura { opacity: 0; display: flex; align-items: center; justify-content: center; }
+.fz-aura::before {
+  content: ""; width: 20vmin; height: 20vmin; border-radius: 50%;
+  background: conic-gradient(#ff3b3b, #ffd400, #3bff6a, #3b9bff, #c13bff, #ff3b3b); filter: blur(10px);
+  box-shadow: 0 0 10vmin 6vmin rgba(255, 255, 255, .5);
+}
+.aura .fz-aura { opacity: 1; }
+.aura .fz-aura::before { animation: auragrow 1.6s ease-in forwards, spinrays 1s linear infinite; }
+.super .aura .fz-aura::before { box-shadow: 0 0 12vmin 8vmin rgba(255, 215, 0, .8); }
+@keyframes auragrow { to { width: 130vmax; height: 130vmax; } }
+.fz-smoke i { position: absolute; left: 50%; top: 50%; border-radius: 50%; opacity: 0; filter: blur(18px); transform: translate(-50%, -50%); }
+.burst .fz-smoke i { animation: smoke 1.6s ease-out forwards; }
+@keyframes smoke { 0% { opacity: .9; transform: translate(-50%, -50%) scale(.3); } 100% { opacity: 0; transform: translate(calc(-50% + var(--dx)), calc(-50% + var(--dy))) scale(2.6); } }
+.fz-sub { position: absolute; left: 0; right: 0; top: 70%; text-align: center; opacity: 0; font: 900 clamp(1.5rem, 6vw, 3.5rem) "Hiragino Kaku Gothic ProN", "Yu Gothic", sans-serif; color: #ffd400; -webkit-text-stroke: 1px #c00; text-shadow: 0 0 20px #ff3b3b; }
+.fz-sub.show { animation: bannerin .5s .3s forwards; }
+
+/* 暗転: 入力停止 → 一瞬で真っ黒 → バックライトのちらつき */
+#freeze.stall { cursor: none; }
+#freeze.black { transition: none !important; }
+#freeze.dim { transition: none; }
+
+/* ブラウン管の電源OFF風の暗転: 上下から閉じて光の線 → 横から縮んで点 → 消える */
+.crt-top, .crt-bot { position: absolute; left: 0; right: 0; height: 0; background: #000; z-index: 3; }
+.crt-top { top: 0; } .crt-bot { bottom: 0; }
+.crt .crt-top, .crt .crt-bot { animation: crtbars .3s cubic-bezier(.6, 0, 1, 1) forwards; }
+@keyframes crtbars { to { height: 50.2%; } }
+.crt-line, .crt-dot { position: absolute; left: 50%; top: 50%; opacity: 0; z-index: 4; pointer-events: none; transform: translate(-50%, -50%); }
+.crt-line { width: 100%; height: .5vmin; background: linear-gradient(90deg, transparent, #b9a0ff 20%, #fff 50%, #b9a0ff 80%, transparent); box-shadow: 0 0 2vmin .8vmin #8a5bff; }
+.crt .crt-line { animation: crtline .75s .3s forwards; }
+@keyframes crtline { 0% { opacity: 1; width: 100%; } 50% { opacity: 1; width: 100%; } 100% { opacity: 0; width: 0; } }
+.crt-dot { width: 3vmin; height: 3vmin; border-radius: 50%; background: #fff; box-shadow: 0 0 3vmin 1.5vmin #8a5bff, 0 0 8vmin 3vmin rgba(138, 91, 255, .5); }
+.crt-dot::before, .crt-dot::after { content: ""; position: absolute; left: 50%; top: 50%; background: linear-gradient(90deg, transparent, #fff, transparent); transform: translate(-50%, -50%); }
+.crt-dot::before { width: 30vmin; height: .4vmin; }
+.crt-dot::after { width: .4vmin; height: 10vmin; background: linear-gradient(0deg, transparent, #fff, transparent); }
+.crt .crt-dot { animation: crtdot .55s .62s forwards; }
+@keyframes crtdot { 0% { opacity: 0; transform: translate(-50%, -50%) scale(.3); } 30% { opacity: 1; transform: translate(-50%, -50%) scale(1.3); } 100% { opacity: 0; transform: translate(-50%, -50%) scale(.1); } }
+#freeze.black .crt-line, #freeze.black .crt-dot { display: none; }
+#freeze.crt { background: transparent; }

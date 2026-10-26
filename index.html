@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>カジノルーレット</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<h1>♠ ROULETTE ♥</h1>
+<div class="main">
+  <div class="wheel-wrap"><canvas id="wheel" width="840" height="840"></canvas></div>
+  <div class="panel">
+    <div class="info">
+      <div class="box"><small>所持チップ</small><b id="bank">100</b></div>
+      <div class="box"><small>ベット合計</small><b id="total">0</b></div>
+      <div class="box"><small>結果</small><b id="num">-</b></div>
+    </div>
+    <div id="kaku"></div>
+    <div id="result">チップを選んでテーブルに賭けてください</div>
+    <div class="chips" id="chips"></div>
+    <div class="table" id="table"></div>
+    <div class="buttons">
+      <button class="act" id="clear">クリア</button>
+      <button class="act spin" id="spin">SPIN</button>
+      <button class="act" id="reset">リセット</button>
+    </div>
+    <div class="history" id="history"></div>
+    <div style="text-align:center;margin-top:10px"><button class="act" id="freezeTest" style="font-size:.85rem;padding:6px 14px">★ フリーズ演出を見る</button></div>
+  </div>
+</div>
+
+<script src="script.js"></script>
+</body>
+</html>
